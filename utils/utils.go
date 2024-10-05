@@ -45,7 +45,6 @@ type clientError struct {
 	IsClientError bool   `json:"isClientError"`
 }
 
-// newClientError creates structured client error response message
 func newClientError(err error, statusCode int, messageToUser string, additionalInfoForDevs ...string) *clientError {
 	additionalInfoJoined := strings.Join(additionalInfoForDevs, "\n")
 	if additionalInfoJoined == "" {
@@ -67,7 +66,6 @@ func newClientError(err error, statusCode int, messageToUser string, additionalI
 	}
 }
 
-// ParseBody parses the values from io reader to a given interface
 func ParseBody(body io.Reader, out interface{}) error {
 	err := json.NewDecoder(body).Decode(out)
 	if err != nil {
@@ -77,12 +75,10 @@ func ParseBody(body io.Reader, out interface{}) error {
 	return nil
 }
 
-// EncodeJSONBody writes the JSON body to response writer
 func EncodeJSONBody(resp http.ResponseWriter, data interface{}) error {
 	return json.NewEncoder(resp).Encode(data)
 }
 
-// RespondJSON sends the interface as a JSON
 func RespondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
 	w.WriteHeader(statusCode)
 	if body != nil {
@@ -92,7 +88,6 @@ func RespondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
 	}
 }
 
-// RespondError sends an error message to the API caller and logs the error
 func RespondError(w http.ResponseWriter, statusCode int, err error, messageToUser string, additionalInfoForDevs ...string) {
 	logrus.Errorf("status: %d, message: %s, err: %+v ", statusCode, messageToUser, err)
 	clientError := newClientError(err, statusCode, messageToUser, additionalInfoForDevs...)
@@ -102,7 +97,6 @@ func RespondError(w http.ResponseWriter, statusCode int, err error, messageToUse
 	}
 }
 
-// HashPassword returns the bcrypt hash of the password
 func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -111,12 +105,10 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-// CheckPassword checks if the provided password is correct or not
 func CheckPassword(password, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-// GenerateJWT creates a JWT token
 func GenerateJWT(userID, name, email, sessionID string) (string, error) {
 	claims := jwt.MapClaims{
 		"userID":    userID,

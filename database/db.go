@@ -1,15 +1,12 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
-	// source/file import is required for migration files to read
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
-
-	// load pq as database driver
-	"errors"
 	_ "github.com/lib/pq"
 )
 
@@ -20,7 +17,6 @@ var (
 type SSLMode string
 
 const (
-	// SSLModeDisable used to disable SSL mode for local development or testing
 	SSLModeDisable SSLMode = "disable"
 )
 

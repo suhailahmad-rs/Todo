@@ -14,7 +14,6 @@ func IsTodoExists(name, userID string) (bool, error) {
 			    AND archived_at IS NULL`
 
 	var check bool
-	// Execute the query and store the result (true if exists, false otherwise) in 'check'
 	checkErr := database.Todo.Get(&check, query, name, userID)
 	if checkErr != nil {
 		return false, checkErr
@@ -42,7 +41,7 @@ func SearchTodo(name, userID string) ([]models.Todo, error) {
                 AND user_id = $2              
                 AND archived_at IS NULL`
 
-	todos := make([]models.Todo, 0) // Initialize an empty slice of Todo models
+	todos := make([]models.Todo, 0)
 	searchErr := database.Todo.Select(&todos, query, name, userID)
 	return todos, searchErr
 }
@@ -122,18 +121,15 @@ func DeleteAllTodos(userID string) (int, error) {
               WHERE user_id = $1             
                 AND archived_at IS NULL`
 
-	// Execute the update query
 	result, delErr := database.Todo.Exec(query, userID)
 	if delErr != nil {
 		return 0, delErr
 	}
 
-	// Get the number of rows affected (i.e., how many todos were archived)
 	rowsAffected, rowsErr := result.RowsAffected()
 	if rowsErr != nil {
 		return 0, rowsErr
 	}
 
-	// Return the count of archived todos
 	return int(rowsAffected), nil
 }
