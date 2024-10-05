@@ -6,20 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="dc4a9fb2-8a16-4940-a470-583b0ff67880" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/.idea/cmd.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/database/db.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/dbHelper/todo.go" beforeDir="false" afterPath="$PROJECT_DIR$/database/dbHelper/todo.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/dbHelper/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/database/dbHelper/user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/todo.go" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/todo.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/middlewares/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/middlewares/auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/middlewares/common.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/utils.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
