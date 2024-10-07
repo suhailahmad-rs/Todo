@@ -5,9 +5,10 @@ import (
 	"Todo/middlewares"
 	"Todo/utils"
 	"context"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Server struct {
@@ -43,10 +44,15 @@ func SetupRoutes() *Server {
 
 		r.Route("/v1/todos", func(r chi.Router) {
 			r.Post("/create", handlers.CreateTodo)
+
+			// Can use filters in one route using query params
+			//start
 			r.Get("/search", handlers.SearchTodo)
 			r.Get("/all-todos", handlers.GetAllTodos)
 			r.Get("/incomplete", handlers.IncompleteTodo)
 			r.Get("/completed", handlers.CompletedTodo)
+			//end
+
 			r.Put("/mark-completed", handlers.MarkCompleted)
 			r.Delete("/delete", handlers.DeleteTodo)
 			r.Delete("/delete-all", handlers.DeleteAllTodos)
