@@ -4,16 +4,17 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/sirupsen/logrus"
-	"github.com/teris-io/shortid"
-	"golang.org/x/crypto/bcrypt"
 	"io"
 	"math/big"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/sirupsen/logrus"
+	"github.com/teris-io/shortid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var generator *shortid.Shortid
@@ -36,6 +37,7 @@ func init() {
 	generator = g
 }
 
+// clientError should be in models
 type clientError struct {
 	ID            string `json:"id"`
 	MessageToUser string `json:"messageToUser"`
