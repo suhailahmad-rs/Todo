@@ -4,132 +4,93 @@ import (
 	"Todo/database"
 	"Todo/models"
 	"Todo/utils"
-	"database/sql"
-	"errors"
 	"time"
 )
 
 func IsUserExists(email string) (bool, error) {
-	query := `SELECT count(id) > 0 as is_exist
+	SQL := `SELECT count(id) > 0 as is_exist
 			  FROM users
 			  WHERE email = TRIM($1)
 			    AND archived_at IS NULL`
 
 	var check bool
-	chkErr := database.Todo.Get(&check, query, email)
-	if chkErr != nil {
-		return false, chkErr // Return error if the query fails
-	}
-	return check, nil
+	chkErr := database.Todo.Get(&check, SQL, email)
+	return check, chkErr
 }
 
-// CreateUser Create a new user in the 'users' table.
 func CreateUser(name, email, password string) error {
-	query := `INSERT INTO users (name, email, password)
+	SQL := `INSERT INTO users (name, email, password)
 			  VALUES (TRIM($1), TRIM($2), $3)`
 
-	_, crtErr := database.Todo.Exec(query, name, email, password)
-	if crtErr != nil {
-		return crtErr // Return error if the query fails
-	}
-	return nil
+	_, crtErr := database.Todo.Exec(SQL, name, email, password)
+	return crtErr
 }
 
-// CreateUserSession Create a new user session in the 'user_session' table and return the session ID.
 func CreateUserSession(userID string) (string, error) {
 	var sessionID string
-	query := `INSERT INTO user_session(user_id) 
+	SQL := `INSERT INTO user_session(user_id) 
               VALUES ($1) RETURNING id`
-	crtErr := database.Todo.QueryRow(query, userID).Scan(&sessionID)
-
-	if crtErr != nil {
-		return "", crtErr // Return error if the query fails
-	}
-	return sessionID, nil
+	crtErr := database.Todo.Get(&sessionID, SQL, userID)
+	return sessionID, crtErr
 }
 
-// GetUserInfo Retrieve user information by email, along with password validation.
-func GetUserInfo(email, password string) (string, string, error) {
-	query := `SELECT u.id,
-       			   name,
-				   u.password
+func GetUserID(email, password string) (string, error) {
+	SQL := `SELECT u.id,
+       			   u.password
 			  FROM users u
-			  WHERE u.archived_at IS NULL
-			    AND u.email = TRIM($1)`
+			  WHERE u.email = TRIM($1)
+			    AND u.archived_at IS NULL`
 
-	var userID string
-	var name string
-	var passwordHash string
-	getErr := database.Todo.QueryRowx(query, email).Scan(&userID, &name, &passwordHash)
-
-	if getErr != nil {
-		if errors.Is(getErr, sql.ErrNoRows) {
-			return "", "", nil // Return nil if no matching user is found
-		}
-		return "", "", getErr
+	var user models.LoginData
+	if getErr := database.Todo.Get(&user, SQL, email); getErr != nil {
+		return "", getErr
 	}
-
-	if passwordErr := utils.CheckPassword(password, passwordHash); passwordErr != nil {
-		return "", "", passwordErr // Return error if password validation fails
+	if passwordErr := utils.CheckPassword(password, user.PasswordHash); passwordErr != nil {
+		return "", passwordErr
 	}
-	return userID, name, nil
+	return user.ID, nil
 }
 
-// GetUserProfile Fetch the user profile for the given user ID.
-func GetUserProfile(userID string) (*models.UserProfile, error) {
-	var user models.UserProfile
-	query := `SELECT id, name, email 
+func GetUser(userID string) (models.User, error) {
+	var user models.User
+	SQL := `SELECT id, name, email 
               FROM users 
-              WHERE id = $1`
+              WHERE id = $1
+                AND archived_at IS NULL`
 
-	fetchErr := database.Todo.QueryRow(query, userID).Scan(&user.ID, &user.Name, &user.Email)
-	if fetchErr != nil {
-		if errors.Is(fetchErr, sql.ErrNoRows) {
-			return nil, fetchErr // Return error if no matching user is found
-		}
-		return nil, fetchErr
-	}
-	return &user, nil
+	getErr := database.Todo.Get(&user, SQL, userID)
+	return user, getErr
 }
 
-// GetArchivedAt Retrieve the 'archived_at' timestamp for a session by session ID.
 func GetArchivedAt(sessionID string) (*time.Time, error) {
 	var archivedAt *time.Time
 
-	query := `SELECT archived_at 
+	SQL := `SELECT archived_at 
               FROM user_session 
               WHERE id = $1`
 
-	getErr := database.Todo.QueryRow(query, sessionID).Scan(&archivedAt)
-	if getErr != nil {
-		return nil, getErr // Return error if the query fails
-	}
-
-	return archivedAt, nil
+	getErr := database.Todo.Get(&archivedAt, SQL, sessionID)
+	return archivedAt, getErr
 }
 
-// DeleteUserSession Mark the user session as deleted by updating the 'archived_at' field.
 func DeleteUserSession(sessionID string) error {
-	query := `UPDATE user_session
+	SQL := `UPDATE user_session
 			  SET archived_at = NOW()
 			  WHERE id = $1
 			    AND archived_at IS NULL`
 
-	_, delErr := database.Todo.Exec(query, sessionID)
-	if delErr != nil {
-		return delErr
-	}
-	return nil
+	_, delErr := database.Todo.Exec(SQL, sessionID)
+	return delErr
 }
 
 // DeleteUser Mark the user as deleted by updating the 'archived_at' field.
 func DeleteUser(userID string) error {
-	query := `UPDATE users
+	SQL := `UPDATE users
 			  SET archived_at = NOW()
 			  WHERE id = $1
 			    AND archived_at IS NULL`
 
-	_, delErr := database.Todo.Exec(query, userID)
+	_, delErr := database.Todo.Exec(SQL, userID)
 	if delErr != nil {
 		return delErr
 	}

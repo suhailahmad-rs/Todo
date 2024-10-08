@@ -5,25 +5,21 @@ import (
 	"Todo/middlewares"
 	"Todo/models"
 	"Todo/utils"
+	"github.com/go-playground/validator/v10"
 	"net/http"
 )
 
-// RegisterUser handles the user registration process
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
-	var body models.User
+	var body models.RegisterRequest
 
 	if parseErr := utils.ParseBody(r.Body, &body); parseErr != nil {
 		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
 		return
 	}
 
-	if body.Name == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "name is required")
-		return
-	}
-
-	if body.Email == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "email is required")
+	v := validator.New()
+	if err := v.Struct(body); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err, "input validation failed")
 		return
 	}
 
@@ -38,19 +34,13 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(body.Password) < 6 {
-		utils.RespondError(w, http.StatusBadRequest, nil, "password must be 6 chars long")
-		return
-	}
-
 	hashedPassword, hasErr := utils.HashPassword(body.Password)
 	if hasErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, hasErr, "failed to secure password")
 		return
 	}
 
-	saveErr := dbHelper.CreateUser(body.Name, body.Email, hashedPassword)
-	if saveErr != nil {
+	if saveErr := dbHelper.CreateUser(body.Name, body.Email, hashedPassword); saveErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, saveErr, "failed to save user")
 		return
 	}
@@ -60,33 +50,28 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}{"user created successfully"})
 }
 
-// LoginUser handles user login and JWT generation
 func LoginUser(w http.ResponseWriter, r *http.Request) {
-	var body models.UserLogin
+	var body models.LoginRequest
 
 	if parseErr := utils.ParseBody(r.Body, &body); parseErr != nil {
 		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
 		return
 	}
 
-	if body.Email == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "email is required")
+	v := validator.New()
+	if err := v.Struct(body); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err, "input validation failed")
 		return
 	}
 
-	if len(body.Password) < 6 {
-		utils.RespondError(w, http.StatusBadRequest, nil, "password must be 6 chars long")
-		return
-	}
-
-	userID, name, userErr := dbHelper.GetUserInfo(body.Email, body.Password)
+	userID, userErr := dbHelper.GetUserID(body.Email, body.Password)
 	if userErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, userErr, "failed to find user")
 		return
 	}
 
-	if userID == "" || name == "" {
-		utils.RespondError(w, http.StatusNotFound, nil, "user not found")
+	if userID == "" {
+		utils.RespondError(w, http.StatusOK, nil, "user not found")
 		return
 	}
 
@@ -96,7 +81,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, genErr := utils.GenerateJWT(userID, name, body.Email, sessionID)
+	token, genErr := utils.GenerateJWT(userID, sessionID)
 	if genErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, genErr, "failed to generate token")
 		return
@@ -105,40 +90,36 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, struct {
 		Message string `json:"message"`
 		Token   string `json:"token"`
-	}{"user logged in successfully", token})
+	}{"login successful", token})
 }
 
-// UserProfile returns the profile information of the logged-in user
-func UserProfile(w http.ResponseWriter, r *http.Request) {
+func GetUser(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	userProfile, getErr := dbHelper.GetUserProfile(userID)
+	user, getErr := dbHelper.GetUser(userID)
 	if getErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get user profile")
+		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get user")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, userProfile)
+	utils.RespondJSON(w, http.StatusOK, user)
 }
 
-// LogoutUser terminates the user's session by deleting the session
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	sessionID := userCtx.SessionID
 
-	saveErr := dbHelper.DeleteUserSession(sessionID)
-	if saveErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, saveErr, "failed to delete user session")
+	if delErr := dbHelper.DeleteUserSession(sessionID); delErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, delErr, "failed to delete user session")
 		return
 	}
 
 	utils.RespondJSON(w, http.StatusOK, struct {
 		Message string `json:"message"`
-	}{"user logged out successfully"})
+	}{"logout successful"})
 }
 
-// DeleteUser deletes the user's account and session
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID

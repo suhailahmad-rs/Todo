@@ -24,6 +24,8 @@ const (
 func SetupRoutes() *Server {
 	router := chi.NewRouter()
 
+	router.Use(middlewares.CommonMiddlewares()...)
+
 	router.Route("/v1", func(r chi.Router) {
 		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 			utils.RespondJSON(w, http.StatusOK, struct {
@@ -32,24 +34,26 @@ func SetupRoutes() *Server {
 		})
 		r.Post("/register", handlers.RegisterUser)
 		r.Post("/login", handlers.LoginUser)
-	})
 
-	router.Group(func(r chi.Router) {
-		r.Use(middlewares.Authenticate)
+		r.Group(func(r chi.Router) {
+			r.Use(middlewares.Authenticate)
 
-		r.Get("/v1/profile", handlers.UserProfile)
-		r.Post("/v1/logout", handlers.LogoutUser)
-		r.Delete("/v1/delete-account", handlers.DeleteUser)
+			r.Route("/user", func(r chi.Router) {
+				r.Get("/profile", handlers.GetUser)
+				r.Post("/logout", handlers.LogoutUser)
+				r.Delete("/delete-account", handlers.DeleteUser)
+			})
 
-		r.Route("/v1/todos", func(r chi.Router) {
-			r.Post("/create", handlers.CreateTodo)
-			r.Get("/search", handlers.SearchTodo)
-			r.Get("/all-todos", handlers.GetAllTodos)
-			r.Get("/incomplete", handlers.IncompleteTodo)
-			r.Get("/completed", handlers.CompletedTodo)
-			r.Put("/mark-completed", handlers.MarkCompleted)
-			r.Delete("/delete", handlers.DeleteTodo)
-			r.Delete("/delete-all", handlers.DeleteAllTodos)
+			r.Route("/todo", func(r chi.Router) {
+				r.Post("/create", handlers.CreateTodo)
+				r.Get("/search", handlers.SearchTodo)
+				r.Get("/all-todos", handlers.GetAllTodos)
+				r.Get("/incomplete", handlers.IncompleteTodo)
+				r.Get("/completed", handlers.CompletedTodo)
+				r.Put("/mark-completed", handlers.MarkCompleted)
+				r.Delete("/delete", handlers.DeleteTodo)
+				r.Delete("/delete-all", handlers.DeleteAllTodos)
+			})
 		})
 	})
 
