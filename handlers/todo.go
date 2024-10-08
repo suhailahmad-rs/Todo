@@ -5,13 +5,14 @@ import (
 	"Todo/middlewares"
 	"Todo/models"
 	"Todo/utils"
+	"database/sql"
+	"errors"
+	"github.com/go-playground/validator/v10"
 	"net/http"
 )
 
-// CreateTodo Handler to create a new todo
 func CreateTodo(w http.ResponseWriter, r *http.Request) {
-	var body models.Todo
-
+	var body models.TodoRequest
 	userCtx := middlewares.UserContext(r)
 	body.UserID = userCtx.UserID
 
@@ -20,13 +21,9 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if body.Name == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "name is required")
-		return
-	}
-
-	if body.Description == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "description is required")
+	v := validator.New()
+	if err := v.Struct(body); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err, "input validation failed")
 		return
 	}
 
@@ -40,51 +37,34 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	saveErr := dbHelper.CreateTodo(body.Name, body.Description, body.UserID)
-	if saveErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, saveErr, "failed to save todo")
+	if saveErr := dbHelper.CreateTodo(body.Name, body.Description, body.UserID); saveErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, saveErr, "failed to create todo")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusCreated, struct {
+	utils.RespondJSON(w, http.StatusOK, struct {
 		Message string `json:"message"`
 	}{"todo created successfully"})
 }
 
-// SearchTodo Handler to search a todo by name
-func SearchTodo(w http.ResponseWriter, r *http.Request) {
-	body := struct {
-		Name string `json:"name"`
-	}{}
-
+func GetTodo(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	if parseErr := utils.ParseBody(r.Body, &body); parseErr != nil {
-		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
-		return
-	}
-
-	if body.Name == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "todo name is required")
-		return
-	}
-
-	todos, getErr := dbHelper.SearchTodo(body.Name, userID)
+	todo, getErr := dbHelper.GetTodo(name, userID)
 	if getErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to search todo")
+		if errors.Is(getErr, sql.ErrNoRows) {
+			utils.RespondError(w, http.StatusOK, getErr, "todo not found")
+		} else {
+			utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get todo")
+		}
 		return
 	}
 
-	if len(todos) == 0 {
-		utils.RespondError(w, http.StatusNotFound, getErr, "no todo found")
-		return
-	}
-
-	utils.RespondJSON(w, http.StatusOK, todos)
+	utils.RespondJSON(w, http.StatusOK, todo)
 }
 
-// GetAllTodos Handler to get all todos for the logged-in user
 func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
@@ -96,11 +76,11 @@ func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(todos) == 0 {
-		utils.RespondError(w, http.StatusNotFound, getErr, "no todo found")
+		utils.RespondError(w, http.StatusOK, getErr, "no todo found")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusCreated, todos)
+	utils.RespondJSON(w, http.StatusOK, todos)
 }
 
 func IncompleteTodo(w http.ResponseWriter, r *http.Request) {

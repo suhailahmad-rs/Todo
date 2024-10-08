@@ -41,12 +41,12 @@ func SetupRoutes() *Server {
 			r.Route("/user", func(r chi.Router) {
 				r.Get("/profile", handlers.GetUser)
 				r.Post("/logout", handlers.LogoutUser)
-				r.Delete("/delete-account", handlers.DeleteUser)
+				r.Delete("/delete", handlers.DeleteUser)
 			})
 
 			r.Route("/todo", func(r chi.Router) {
 				r.Post("/create", handlers.CreateTodo)
-				r.Get("/search", handlers.SearchTodo)
+				r.Get("/search", handlers.GetTodo)
 				r.Get("/all-todos", handlers.GetAllTodos)
 				r.Get("/incomplete", handlers.IncompleteTodo)
 				r.Get("/completed", handlers.CompletedTodo)

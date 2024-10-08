@@ -83,7 +83,6 @@ func DeleteUserSession(sessionID string) error {
 	return delErr
 }
 
-// DeleteUser Mark the user as deleted by updating the 'archived_at' field.
 func DeleteUser(userID string) error {
 	SQL := `UPDATE users
 			  SET archived_at = NOW()
@@ -91,8 +90,5 @@ func DeleteUser(userID string) error {
 			    AND archived_at IS NULL`
 
 	_, delErr := database.Todo.Exec(SQL, userID)
-	if delErr != nil {
-		return delErr
-	}
-	return nil
+	return delErr
 }

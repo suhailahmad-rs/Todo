@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     archived_at TIMESTAMP WITH TIME ZONE
 );
-CREATE UNIQUE INDEX IF NOT EXISTS active_user ON users (TRIM(LOWER(email))) WHERE archived_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS unique_user ON users (email) WHERE archived_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS todos
 (
@@ -21,5 +21,6 @@ CREATE TABLE IF NOT EXISTS todos
     created_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     archived_at  TIMESTAMP WITH TIME ZONE
 );
+CREATE UNIQUE INDEX IF NOT EXISTS unique_todo ON todos (user_id, name) WHERE archived_at IS NULL;
 
 COMMIT;

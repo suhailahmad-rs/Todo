@@ -5,48 +5,38 @@ import (
 	"Todo/models"
 )
 
-// IsTodoExists checks if a todo with a given name exists for the specified user.
 func IsTodoExists(name, userID string) (bool, error) {
-	query := `SELECT count(id) > 0 as is_exist
+	SQL := `SELECT count(id) > 0 as is_exist
 			  FROM todos
 			  WHERE name = TRIM($1)     
 			    AND user_id = $2        
 			    AND archived_at IS NULL`
 
 	var check bool
-	checkErr := database.Todo.Get(&check, query, name, userID)
-	if checkErr != nil {
-		return false, checkErr
-	}
-	return check, nil
+	chkErr := database.Todo.Get(&check, SQL, name, userID)
+	return check, chkErr
 }
 
-// CreateTodo inserts a new todo into the database for the specified user.
 func CreateTodo(name, description, userID string) error {
-	query := `INSERT INTO todos (name, description, user_id)
+	SQL := `INSERT INTO todos (name, description, user_id)
 			  VALUES (TRIM($1), TRIM($2), $3)`
 
-	_, createErr := database.Todo.Exec(query, name, description, userID)
-	if createErr != nil {
-		return createErr
-	}
-	return nil
+	_, crtErr := database.Todo.Exec(SQL, name, description, userID)
+	return crtErr
 }
 
-// SearchTodo searches for todos by name for a specific user.
-func SearchTodo(name, userID string) ([]models.Todo, error) {
-	query := `SELECT id, user_id, name, description, is_completed
+func GetTodo(name, userID string) (models.Todo, error) {
+	SQL := `SELECT id, user_id, name, description, is_completed
               FROM todos
               WHERE name ILIKE '%' || $1 || '%' 
                 AND user_id = $2              
                 AND archived_at IS NULL`
 
-	todos := make([]models.Todo, 0)
-	searchErr := database.Todo.Select(&todos, query, name, userID)
-	return todos, searchErr
+	var todo models.Todo
+	getErr := database.Todo.Get(&todo, SQL, name, userID)
+	return todo, getErr
 }
 
-// GetAllTodos fetches all active todos for the specified user.
 func GetAllTodos(userID string) ([]models.Todo, error) {
 	query := `SELECT id, user_id, name, description, is_completed
 			  FROM todos
@@ -54,8 +44,8 @@ func GetAllTodos(userID string) ([]models.Todo, error) {
 			    AND archived_at IS NULL`
 
 	todos := make([]models.Todo, 0)
-	FetchErr := database.Todo.Select(&todos, query, userID)
-	return todos, FetchErr
+	getErr := database.Todo.Select(&todos, query, userID)
+	return todos, getErr
 }
 
 // GetIncompleteTodos fetches all incomplete todos for the specified user.

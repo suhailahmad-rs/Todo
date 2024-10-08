@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"Todo/database"
 	"Todo/database/dbHelper"
 	"Todo/middlewares"
 	"Todo/models"
 	"Todo/utils"
 	"github.com/go-playground/validator/v10"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 )
 
@@ -28,7 +30,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusInternalServerError, existsErr, "failed to check user existence")
 		return
 	}
-
 	if exists {
 		utils.RespondError(w, http.StatusBadRequest, nil, "user already exists")
 		return
@@ -125,15 +126,16 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := userCtx.UserID
 	sessionID := userCtx.SessionID
 
-	saveErr := dbHelper.DeleteUser(userID)
-	if saveErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, saveErr, "failed to delete user account")
-		return
-	}
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
+		delErr := dbHelper.DeleteUser(userID)
+		if delErr != nil {
+			return delErr
+		}
 
-	saveErr = dbHelper.DeleteUserSession(sessionID)
-	if saveErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, saveErr, "failed to delete user session")
+		return dbHelper.DeleteUserSession(sessionID)
+	})
+	if txErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, txErr, "failed to delete user account")
 		return
 	}
 
