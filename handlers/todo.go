@@ -75,15 +75,10 @@ func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(todos) == 0 {
-		utils.RespondError(w, http.StatusOK, getErr, "no todo found")
-		return
-	}
-
 	utils.RespondJSON(w, http.StatusOK, todos)
 }
 
-func IncompleteTodo(w http.ResponseWriter, r *http.Request) {
+func IncompleteTodos(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
@@ -93,15 +88,9 @@ func IncompleteTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(todos) == 0 {
-		utils.RespondError(w, http.StatusNotFound, getErr, "No todo found")
-		return
-	}
-
-	utils.RespondJSON(w, http.StatusCreated, todos)
+	utils.RespondJSON(w, http.StatusOK, todos)
 }
 
-// CompletedTodo Handler to get completed todos
 func CompletedTodo(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
@@ -112,12 +101,7 @@ func CompletedTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(todos) == 0 {
-		utils.RespondError(w, http.StatusNotFound, getErr, "No todo found")
-		return
-	}
-
-	utils.RespondJSON(w, http.StatusCreated, todos)
+	utils.RespondJSON(w, http.StatusOK, todos)
 }
 
 // MarkCompleted Handler to mark a todo as completed

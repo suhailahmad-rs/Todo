@@ -48,7 +48,7 @@ func SetupRoutes() *Server {
 				r.Post("/create", handlers.CreateTodo)
 				r.Get("/search", handlers.GetTodo)
 				r.Get("/all-todos", handlers.GetAllTodos)
-				r.Get("/incomplete", handlers.IncompleteTodo)
+				r.Get("/incomplete", handlers.IncompleteTodos)
 				r.Get("/completed", handlers.CompletedTodo)
 				r.Put("/mark-completed", handlers.MarkCompleted)
 				r.Delete("/delete", handlers.DeleteTodo)

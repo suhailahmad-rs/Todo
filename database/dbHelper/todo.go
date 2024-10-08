@@ -48,7 +48,6 @@ func GetAllTodos(userID string) ([]models.Todo, error) {
 	return todos, getErr
 }
 
-// GetIncompleteTodos fetches all incomplete todos for the specified user.
 func GetIncompleteTodos(userID string) ([]models.Todo, error) {
 	query := `SELECT id, user_id, name, description, is_completed
 			  FROM todos
@@ -57,11 +56,10 @@ func GetIncompleteTodos(userID string) ([]models.Todo, error) {
 			    AND archived_at IS NULL`
 
 	todos := make([]models.Todo, 0)
-	FetchErr := database.Todo.Select(&todos, query, userID)
-	return todos, FetchErr
+	getErr := database.Todo.Select(&todos, query, userID)
+	return todos, getErr
 }
 
-// GetCompletedTodos fetches all completed todos for the specified user.
 func GetCompletedTodos(userID string) ([]models.Todo, error) {
 	query := `SELECT id, user_id, name, description, is_completed
 			  FROM todos
@@ -70,8 +68,8 @@ func GetCompletedTodos(userID string) ([]models.Todo, error) {
 			    AND archived_at IS NULL`
 
 	todos := make([]models.Todo, 0)
-	FetchErr := database.Todo.Select(&todos, query, userID)
-	return todos, FetchErr
+	getErr := database.Todo.Select(&todos, query, userID)
+	return todos, getErr
 }
 
 // MarkCompleted marks a specific todo as completed.
