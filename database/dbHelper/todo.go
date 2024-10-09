@@ -25,99 +25,49 @@ func CreateTodo(name, description, userID string) error {
 	return crtErr
 }
 
-func GetTodo(name, userID string) (models.Todo, error) {
+func GetAllTodos(userID, keyword, completed string) ([]models.Todo, error) {
 	SQL := `SELECT id, user_id, name, description, is_completed
-              FROM todos
-              WHERE name ILIKE '%' || $1 || '%' 
-                AND user_id = $2              
-                AND archived_at IS NULL`
-
-	var todo models.Todo
-	getErr := database.Todo.Get(&todo, SQL, name, userID)
-	return todo, getErr
-}
-
-func GetAllTodos(userID string) ([]models.Todo, error) {
-	query := `SELECT id, user_id, name, description, is_completed
-			  FROM todos
-			  WHERE user_id = $1             
-			    AND archived_at IS NULL`
+				FROM todos
+				WHERE user_id = $1
+				  AND (
+					$2 = '' OR (name ILIKE '%' || $2 || '%' OR description ILIKE '%' || $2 || '%')
+					)
+				  AND ($3 = '' OR is_completed = CAST($3 AS BOOLEAN))
+				  AND archived_at IS NULL`
 
 	todos := make([]models.Todo, 0)
-	getErr := database.Todo.Select(&todos, query, userID)
+	getErr := database.Todo.Select(&todos, SQL, userID, keyword, completed)
 	return todos, getErr
 }
 
-func GetIncompleteTodos(userID string) ([]models.Todo, error) {
-	query := `SELECT id, user_id, name, description, is_completed
-			  FROM todos
-			  WHERE user_id = $1             
-			    AND is_completed = false     
-			    AND archived_at IS NULL`
-
-	todos := make([]models.Todo, 0)
-	getErr := database.Todo.Select(&todos, query, userID)
-	return todos, getErr
-}
-
-func GetCompletedTodos(userID string) ([]models.Todo, error) {
-	query := `SELECT id, user_id, name, description, is_completed
-			  FROM todos
-			  WHERE user_id = $1             
-			    AND is_completed = true      
-			    AND archived_at IS NULL`
-
-	todos := make([]models.Todo, 0)
-	getErr := database.Todo.Select(&todos, query, userID)
-	return todos, getErr
-}
-
-// MarkCompleted marks a specific todo as completed.
 func MarkCompleted(id, userID string) error {
-	query := `UPDATE todos
+	SQL := `UPDATE todos
               SET is_completed = true        
               WHERE id = $1                  
                 AND user_id = $2             
                 AND archived_at IS NULL`
 
-	_, updErr := database.Todo.Exec(query, id, userID)
-	if updErr != nil {
-		return updErr
-	}
-	return nil
+	_, updErr := database.Todo.Exec(SQL, id, userID)
+	return updErr
 }
 
-// DeleteTodo performs a soft delete by archiving a specific todo.
 func DeleteTodo(id, userID string) error {
-	query := `UPDATE todos
+	SQL := `UPDATE todos
 			  SET archived_at = NOW()        
 			  WHERE id = $1                  
 			    AND user_id = $2             
 			    AND archived_at IS NULL`
 
-	_, delErr := database.Todo.Exec(query, id, userID)
-	if delErr != nil {
-		return delErr
-	}
-	return nil
+	_, delErr := database.Todo.Exec(SQL, id, userID)
+	return delErr
 }
 
-// DeleteAllTodos performs a soft delete by archiving all todos for a specific user.
-func DeleteAllTodos(userID string) (int, error) {
-	query := `UPDATE todos
+func DeleteAllTodos(userID string) error {
+	SQL := `UPDATE todos
               SET archived_at = NOW()        
               WHERE user_id = $1             
                 AND archived_at IS NULL`
 
-	result, delErr := database.Todo.Exec(query, userID)
-	if delErr != nil {
-		return 0, delErr
-	}
-
-	rowsAffected, rowsErr := result.RowsAffected()
-	if rowsErr != nil {
-		return 0, rowsErr
-	}
-
-	return int(rowsAffected), nil
+	_, delErr := database.Todo.Exec(SQL, userID)
+	return delErr
 }
