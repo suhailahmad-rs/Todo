@@ -34,7 +34,7 @@ func CreateUserSession(userID string) (string, error) {
 	return sessionID, crtErr
 }
 
-func GetUserID(email, password string) (string, error) {
+func GetUserID(body models.LoginRequest) (string, error) {
 	SQL := `SELECT u.id,
        			   u.password
 			  FROM users u
@@ -42,10 +42,10 @@ func GetUserID(email, password string) (string, error) {
 			    AND u.archived_at IS NULL`
 
 	var user models.LoginData
-	if getErr := database.Todo.Get(&user, SQL, email); getErr != nil {
+	if getErr := database.Todo.Get(&user, SQL, body.Email); getErr != nil {
 		return "", getErr
 	}
-	if passwordErr := utils.CheckPassword(password, user.PasswordHash); passwordErr != nil {
+	if passwordErr := utils.CheckPassword(body.Password, user.PasswordHash); passwordErr != nil {
 		return "", passwordErr
 	}
 	return user.ID, nil

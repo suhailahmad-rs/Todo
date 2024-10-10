@@ -17,11 +17,11 @@ func IsTodoExists(name, userID string) (bool, error) {
 	return check, chkErr
 }
 
-func CreateTodo(name, description, userID string) error {
+func CreateTodo(body models.TodoRequest) error {
 	SQL := `INSERT INTO todos (name, description, user_id)
 			  VALUES (TRIM($1), TRIM($2), $3)`
 
-	_, crtErr := database.Todo.Exec(SQL, name, description, userID)
+	_, crtErr := database.Todo.Exec(SQL, body.Name, body.Description, body.UserID)
 	return crtErr
 }
 
@@ -40,25 +40,25 @@ func GetAllTodos(userID, keyword, completed string) ([]models.Todo, error) {
 	return todos, getErr
 }
 
-func MarkCompleted(id, userID string) error {
+func MarkCompleted(todoID, userID string) error {
 	SQL := `UPDATE todos
               SET is_completed = true        
               WHERE id = $1                  
                 AND user_id = $2             
                 AND archived_at IS NULL`
 
-	_, updErr := database.Todo.Exec(SQL, id, userID)
+	_, updErr := database.Todo.Exec(SQL, todoID, userID)
 	return updErr
 }
 
-func DeleteTodo(id, userID string) error {
+func DeleteTodo(todoID, userID string) error {
 	SQL := `UPDATE todos
 			  SET archived_at = NOW()        
 			  WHERE id = $1                  
 			    AND user_id = $2             
 			    AND archived_at IS NULL`
 
-	_, delErr := database.Todo.Exec(SQL, id, userID)
+	_, delErr := database.Todo.Exec(SQL, todoID, userID)
 	return delErr
 }
 

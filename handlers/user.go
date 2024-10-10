@@ -65,7 +65,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, userErr := dbHelper.GetUserID(body.Email, body.Password)
+	userID, userErr := dbHelper.GetUserID(body)
 	if userErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, userErr, "failed to find user")
 		return

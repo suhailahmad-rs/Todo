@@ -3,7 +3,6 @@ package server
 import (
 	"Todo/handlers"
 	"Todo/middlewares"
-	"Todo/utils"
 	"context"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -26,30 +25,28 @@ func SetupRoutes() *Server {
 
 	router.Use(middlewares.CommonMiddlewares()...)
 
-	router.Route("/v1", func(r chi.Router) {
-		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-			utils.RespondJSON(w, http.StatusOK, struct {
-				Status string `json:"status"`
-			}{Status: "server is running"})
-		})
-		r.Post("/register", handlers.RegisterUser)
-		r.Post("/login", handlers.LoginUser)
+	router.Route("/v1", func(v1 chi.Router) {
+		v1.Post("/register", handlers.RegisterUser)
+		v1.Post("/login", handlers.LoginUser)
 
-		r.Group(func(r chi.Router) {
+		v1.Group(func(r chi.Router) {
 			r.Use(middlewares.Authenticate)
 
-			r.Route("/user", func(r chi.Router) {
-				r.Get("/profile", handlers.GetUser)
-				r.Post("/logout", handlers.LogoutUser)
-				r.Delete("/delete", handlers.DeleteUser)
+			r.Route("/user", func(user chi.Router) {
+				user.Get("/profile", handlers.GetUser)
+				user.Post("/logout", handlers.LogoutUser)
+				user.Delete("/delete", handlers.DeleteUser)
 			})
 
-			r.Route("/todo", func(r chi.Router) {
-				r.Post("/create", handlers.CreateTodo)
-				r.Get("/all-todos", handlers.GetAllTodos)
-				r.Put("/mark-completed", handlers.MarkCompleted)
-				r.Delete("/delete", handlers.DeleteTodo)
-				r.Delete("/delete-all", handlers.DeleteAllTodos)
+			r.Route("/todo", func(todo chi.Router) {
+				todo.Post("/", handlers.CreateTodo)
+				todo.Get("/", handlers.GetAllTodos)
+				todo.Delete("/delete-all", handlers.DeleteAllTodos)
+
+				todo.Route("/{todoId}", func(todoIDRoute chi.Router) {
+					todoIDRoute.Delete("/", handlers.DeleteTodo)
+					todoIDRoute.Put("/mark-completed", handlers.MarkCompleted)
+				})
 			})
 		})
 	})

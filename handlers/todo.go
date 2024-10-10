@@ -5,6 +5,7 @@ import (
 	"Todo/middlewares"
 	"Todo/models"
 	"Todo/utils"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"net/http"
 )
@@ -35,7 +36,7 @@ func CreateTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if saveErr := dbHelper.CreateTodo(body.Name, body.Description, body.UserID); saveErr != nil {
+	if saveErr := dbHelper.CreateTodo(body); saveErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, saveErr, "failed to create todo")
 		return
 	}
@@ -62,12 +63,12 @@ func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 }
 
 func MarkCompleted(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	todoID := chi.URLParam(r, "todoID")
 
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	updErr := dbHelper.MarkCompleted(id, userID)
+	updErr := dbHelper.MarkCompleted(todoID, userID)
 	if updErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, updErr, "failed to mark todo completed")
 		return
@@ -79,12 +80,12 @@ func MarkCompleted(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTodo(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	todoID := chi.URLParam(r, "todoID")
 
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
 
-	delErr := dbHelper.DeleteTodo(id, userID)
+	delErr := dbHelper.DeleteTodo(todoID, userID)
 	if delErr != nil {
 		utils.RespondError(w, http.StatusInternalServerError, delErr, "failed to delete todo")
 		return
