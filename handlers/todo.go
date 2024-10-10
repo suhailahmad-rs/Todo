@@ -63,7 +63,7 @@ func GetAllTodos(w http.ResponseWriter, r *http.Request) {
 }
 
 func MarkCompleted(w http.ResponseWriter, r *http.Request) {
-	todoID := chi.URLParam(r, "todoID")
+	todoID := chi.URLParam(r, "todoId")
 
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
@@ -80,7 +80,7 @@ func MarkCompleted(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTodo(w http.ResponseWriter, r *http.Request) {
-	todoID := chi.URLParam(r, "todoID")
+	todoID := chi.URLParam(r, "todoId")
 
 	userCtx := middlewares.UserContext(r)
 	userID := userCtx.UserID
